@@ -1,0 +1,38 @@
+name: List GCP VMs
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: 'GCP Project ID'
+        required: true
+        default: 'rishabhmodi'
+      stack_name:
+        description: 'Stack Name'
+        required: true
+      stack_environment:
+        description: 'Stack Environment'
+        required: true
+      service_name:
+        description: 'Service Name'
+        required: true
+
+jobs:
+  list-vms:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+      
+      - name: Set up gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: List VMs in GCP
+        run: |
+          gcloud config set project ${{ github.event.inputs.project_id }}
+          gcloud compute instances list --filter="name:${{ github.event.inputs.stack_name }}-${{ github.event.inputs.stack_environment }}-${{ github.event.inputs.service_name }}-*" --format="table(name, zone, status)"
